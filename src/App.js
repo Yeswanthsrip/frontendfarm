@@ -37,17 +37,17 @@ function App() {
 
   // ✅ FETCH FUNCTIONS
   const fetchAnimals = useCallback(async () => {
-    const res = await axios.get(`http://localhost:5000/animal?userId=${userId}`);
+    const res = await axios.get(`https://backendfarm-7lzo.onrender.com/animal?userId=${userId}`);
     setAnimals(res.data);
   }, [userId]);
 
   const fetchCustomers = useCallback(async () => {
-    const res = await axios.get(`http://localhost:5000/customer?userId=${userId}`);
+    const res = await axios.get(`https://backendfarm-7lzo.onrender.com/customer?userId=${userId}`);
     setCustomers(res.data);
   }, [userId]);
 
   const fetchDeliveries = useCallback(async () => {
-    const res = await axios.get(`http://localhost:5000/delivery?userId=${userId}`);
+    const res = await axios.get(`https://backendfarm-7lzo.onrender.com/delivery?userId=${userId}`);
     setDeliveries(res.data);
   }, [userId]);
 
@@ -62,7 +62,7 @@ function App() {
   // 🔐 LOGIN (✅ FIXED)
   const login = async () => {
     try {
-      const res = await axios.post('http://localhost:5000/auth/login', {
+      const res = await axios.post('https://backendfarm-7lzo.onrender.com/auth/login', {
         username,
         password
       });
@@ -79,7 +79,7 @@ function App() {
   // 📝 REGISTER
   const register = async () => {
     try {
-      await axios.post('http://localhost:5000/auth/register', {
+      await axios.post('https://backendfarm-7lzo.onrender.com/auth/register', {
         username,
         password
       });
@@ -93,7 +93,7 @@ function App() {
 
   // 🐄 Add Animal
   const addAnimal = async () => {
-    await axios.post('http://localhost:5000/animal/add', {
+    await axios.post('https://backendfarm-7lzo.onrender.com/animal/add', {
       userId,
       type,
       name: animalName,
@@ -113,7 +113,7 @@ function App() {
 
   // 👤 Add Customer
   const addCustomer = async () => {
-    await axios.post('http://localhost:5000/customer/add', {
+    await axios.post('https://backendfarm-7lzo.onrender.com/customer/add', {
       userId,
       name
     });
@@ -124,7 +124,7 @@ function App() {
 
   // 🚚 Add Delivery
   const addDelivery = async () => {
-    await axios.post('http://localhost:5000/delivery/add', {
+    await axios.post('https://backendfarm-7lzo.onrender.com/delivery/add', {
       userId,
       customerId,
       date,
@@ -144,7 +144,7 @@ function App() {
 
   // 💰 Billing
   const generateBill = async () => {
-    const res = await axios.post('http://localhost:5000/billing/generate', {
+    const res = await axios.post('https://backendfarm-7lzo.onrender.com/billing/generate', {
       userId,
       customerId: billCustomerId,
       pricePerLitre: Number(price),
