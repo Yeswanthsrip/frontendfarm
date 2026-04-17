@@ -137,7 +137,7 @@ function App() {
   const getTotalDeliveredMilk = () => deliveries.reduce((sum, d) => sum + d.litres, 0);
   const getRemainingMilk = () => getTotalMilk() - getTotalDeliveredMilk();
 
-  // 🔐 Login UI
+  // 🔐 LOGIN UI
   if (!isLoggedIn) {
     return (
       <div className="container">
@@ -148,9 +148,7 @@ function App() {
           <button onClick={isRegister ? register : login}>
             {isRegister ? 'Register' : 'Login'}
           </button>
-          <button onClick={() => setIsRegister(!isRegister)}>
-            Switch
-          </button>
+          <button onClick={() => setIsRegister(!isRegister)}>Switch</button>
         </div>
       </div>
     );
@@ -159,8 +157,32 @@ function App() {
   return (
     <div className="container">
 
-      <h2>🐄 Dairy App</h2>
+      {/* 🔝 HEADER */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2>🐄 Dairy App</h2>
 
+        {/* 🏡 HOME TOP RIGHT */}
+        <div onClick={() => setPage('home')} style={{ fontSize: 28, cursor: 'pointer' }}>
+          🏡
+        </div>
+      </div>
+
+      {/* 🏡 HOME */}
+      {page === 'home' && (
+        <div className="card">
+          <h3>Owner Details</h3>
+
+          <p><b>Name:</b> Yeswanth Sri</p>
+          <p><b>Address:</b> Pothavaram</p>
+
+          <p><b>Cows:</b> {animals.filter(a => a.type === 'Cow').length}</p>
+          <p><b>Buffalos:</b> {animals.filter(a => a.type === 'Buffalo').length}</p>
+
+          <p><b>Monthly Milk:</b> {getTotalMilk() * 30} L</p>
+        </div>
+      )}
+
+      {/* 🐄 ANIMALS */}
       {page === 'animals' && (
         <div className="card">
           <h3>Animals</h3>
@@ -175,7 +197,6 @@ function App() {
             🥛 {getTotalMilk()}L | 🚚 {getTotalDeliveredMilk()}L | 🧊 {getRemainingMilk()}L
           </div>
 
-          {/* ✅ ANIMALS LIST */}
           {animals.map(a => (
             <div key={a._id}>
               🐄 {a.type} - {a.name} ({a.age}) - 🥛 {a.milkPerDay}L
@@ -184,6 +205,16 @@ function App() {
         </div>
       )}
 
+      {/* 👤 CUSTOMER */}
+      {page === 'customer' && (
+        <div className="card">
+          <h3>Customer</h3>
+          <input placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
+          <button onClick={addCustomer}>Add</button>
+        </div>
+      )}
+
+      {/* 🚚 DELIVERY */}
       {page === 'delivery' && (
         <div className="card">
           <h3>Delivery</h3>
@@ -202,14 +233,7 @@ function App() {
         </div>
       )}
 
-      {page === 'customer' && (
-        <div className="card">
-          <h3>Customer</h3>
-          <input placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
-          <button onClick={addCustomer}>Add</button>
-        </div>
-      )}
-
+      {/* 💰 BILLING */}
       {page === 'billing' && (
         <div className="card">
           <h3>Billing</h3>
@@ -230,6 +254,7 @@ function App() {
         </div>
       )}
 
+      {/* 🔻 NAVBAR */}
       <div className="navbar">
         <div onClick={() => setPage('animals')}>🐄</div>
         <div onClick={() => setPage('delivery')}>🚚</div>
