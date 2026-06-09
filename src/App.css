@@ -4,40 +4,34 @@ body {
   background: #dfe8d0;
   display: flex;
   justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.container {
+  width: 100%;
+  max-width: 420px;
+  padding: 20px;
 }
 
 .login-wrapper {
   width: 100%;
   max-width: 400px;
-  margin-top: 100px;
-}
-
-.container {
-  max-width: 400px;
-  width: 100%;
-  padding: 15px;
-  min-height: 100vh;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .card {
   background: white;
-  padding: 15px;
-  border-radius: 12px;
+  padding: 20px;
+  border-radius: 15px;
   margin-top: 15px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-input, select {
+input {
   width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  border-radius: 8px;
+  padding: 12px;
+  margin-top: 12px;
+  border-radius: 10px;
   border: 1px solid #ccc;
 }
 
@@ -45,20 +39,53 @@ button {
   width: 100%;
   padding: 12px;
   margin-top: 15px;
-  background: green;
-  color: yellow;
+  background: #2e7d32;
+  color: white;
   border: none;
   border-radius: 10px;
   font-weight: bold;
+  cursor: pointer;
 }
 
-.navbar {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  max-width: 400px;
-  display: flex;
-  justify-content: space-around;
+.link {
+  text-align: center;
+  margin-top: 10px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.grid div {
   background: white;
-  padding: 10px;
+  padding: 30px 15px;
+  border-radius: 18px;
+  text-align: center;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  transition: 0.2s;
+}
+
+.grid div span {
+  font-size: 28px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.grid div:hover {
+  transform: scale(1.05);
+  background: #f1f8e9;
+}
+
+select {
+  width: 100%;
+  padding: 12px;
+  margin-top: 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
 }

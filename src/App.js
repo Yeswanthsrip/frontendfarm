@@ -1,86 +1,151 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import './App.css';
+import jsPDF from 'jspdf';
 
 function App() {
-  const [page, setPage] = useState('animals');
+  const [page, setPage] = useState('dashboard');
 
-  // 🔐 Auth
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isRegister, setIsRegister] = useState(false);
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [userId, setUserId] = useState('');
 
-  // 🔥 NEW (Owner details)
+  const [userId, setUserId] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [farmAddress, setFarmAddress] = useState('');
 
-  // 🐄 Animals
-  const [animals, setAnimals] = useState([]);
-  const [type, setType] = useState('');
+  // Milk Entry
+  const [milkDate, setMilkDate] = useState('');
+  const [morning, setMorning] = useState('');
+  const [evening, setEvening] = useState('');
+
+  // Milk History
+  const [milkHistory, setMilkHistory] = useState([]);
+
+  // Animals
+  const [type, setType] = useState('Cow');
   const [animalName, setAnimalName] = useState('');
   const [age, setAge] = useState('');
   const [milkPerDay, setMilkPerDay] = useState('');
+  const [animals, setAnimals] = useState([]);
 
-  // 👤 Customers
+  // Customers
+  const [customerName, setCustomerName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [apartment, setApartment] = useState('');
   const [customers, setCustomers] = useState([]);
-  const [name, setName] = useState('');
 
-  // 🚚 Delivery
-  const [deliveries, setDeliveries] = useState([]);
-  const [customerId, setCustomerId] = useState('');
-  const [date, setDate] = useState('');
+  // Delivery
+  const [selectedCustomer, setSelectedCustomer] = useState('');
+  const [deliveryDate, setDeliveryDate] = useState('');
   const [litres, setLitres] = useState('');
+  const [deliveries, setDeliveries] = useState([]);
 
-  // 💰 Billing
-  const [billCustomerId, setBillCustomerId] = useState('');
-  const [price, setPrice] = useState('');
-  const [month, setMonth] = useState('');
-  const [bill, setBill] = useState(null);
+  // Billing
+  const [billingCustomer, setBillingCustomer] = useState('');
+  const [billingMonth, setBillingMonth] = useState('');
+  const [pricePerLitre, setPricePerLitre] = useState('');
+  const [billData, setBillData] = useState(null);
 
-  const BASE_URL = "https://backendfarm-7lzo.onrender.com";
+  const BASE_URL = "http://localhost:5000";
 
-  // 🔄 Fetch
+  // Fetch Milk History
+  const fetchMilk = useCallback(async () => {
+    try {
+      console.log("Fetching for user:", userId);
+
+      const res = await axios.get(
+        `${BASE_URL}/milk?userId=${userId}`
+      );
+
+      console.log("Response:", res.data);
+
+      setMilkHistory(res.data);
+
+    } catch (err) {
+      console.log(err);
+    }
+  }, [userId]);
+
+
+  // Fetch Animal History
   const fetchAnimals = useCallback(async () => {
-    const res = await axios.get(`${BASE_URL}/animal?userId=${userId}`);
-    setAnimals(res.data);
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/animal?userId=${userId}`
+      );
+
+      setAnimals(res.data);
+    } catch (err) {
+      console.log(err);
+    }
   }, [userId]);
 
+  // Fetch Customers
   const fetchCustomers = useCallback(async () => {
-    const res = await axios.get(`${BASE_URL}/customer?userId=${userId}`);
-    setCustomers(res.data);
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/customer?userId=${userId}`
+      );
+
+      setCustomers(res.data);
+    } catch (err) {
+      console.log(err);
+    }
   }, [userId]);
+
+  // Fetch Deliveries
 
   const fetchDeliveries = useCallback(async () => {
-    const res = await axios.get(`${BASE_URL}/delivery?userId=${userId}`);
-    setDeliveries(res.data);
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/delivery?userId=${userId}`
+      );
+
+      setDeliveries(res.data);
+    } catch (err) {
+      console.log(err);
+    }
   }, [userId]);
 
   useEffect(() => {
     if (isLoggedIn && userId) {
+      fetchMilk();
       fetchAnimals();
       fetchCustomers();
       fetchDeliveries();
     }
-  }, [isLoggedIn, userId, fetchAnimals, fetchCustomers, fetchDeliveries]);
+  }, [
+    isLoggedIn,
+    userId,
+    fetchMilk,
+    fetchAnimals,
+    fetchCustomers,
+    fetchDeliveries
+  ]);
 
-  // 🔐 LOGIN
+  // LOGIN
   const login = async () => {
     try {
-      const res = await axios.post(`${BASE_URL}/auth/login`, { username, password });
+      const res = await axios.post(
+        `${BASE_URL}/auth/login`,
+        { username, password }
+      );
 
       setUserId(res.data.userId);
-      setOwnerName(res.data.ownerName);       // ✅ IMPORTANT
-      setFarmAddress(res.data.farmAddress);   // ✅ IMPORTANT
+      setOwnerName(res.data.ownerName);
+      setFarmAddress(res.data.farmAddress);
 
       setIsLoggedIn(true);
     } catch {
-      alert('Login failed ❌');
+      alert("Invalid username or password ❌");
     }
   };
 
-  // 📝 REGISTER
+  // REGISTER
   const register = async () => {
     try {
       await axios.post(`${BASE_URL}/auth/register`, {
@@ -97,207 +162,1000 @@ function App() {
     }
   };
 
-  // 🐄 Add Animal
+  // ADD MILK
+  const addMilk = async () => {
+  try {
+
+    console.log("Saving:", {
+      userId,
+      date: milkDate,
+      morning,
+      evening
+    });
+
+    await axios.post(`${BASE_URL}/milk/add`, {
+      userId,
+      date: milkDate,
+      morning: Number(morning),
+      evening: Number(evening)
+    });
+
+    fetchMilk();
+
+    alert("Milk Added ✅");
+
+    setMilkDate('');
+    setMorning('');
+    setEvening('');
+
+    } catch (err) {
+
+      if (err.response?.status === 409) {
+
+        const replace = window.confirm(
+          "Data already exists for this date.\nReplace old data?"
+        );
+
+        if (replace) {
+
+          await axios.put(`${BASE_URL}/milk/update`, {
+            userId,
+            date: milkDate,
+            morning: Number(morning),
+            evening: Number(evening)
+          });
+
+          fetchMilk();
+
+          alert("Data Updated ✅");
+        }
+
+        return;
+      }
+
+      alert("Failed ❌");
+    }
+  };
+
+
+  // DELETE MILK
+
+  const deleteMilk = async (id) => {
+
+    const confirmDelete = window.confirm(
+      "Delete this milk entry?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+
+      await axios.delete(
+        `${BASE_URL}/milk/delete/${id}`
+      );
+
+      fetchMilk();
+
+      alert("Milk Entry Deleted ✅");
+
+    } catch (err) {
+      console.log(err);
+      alert("Delete Failed ❌");
+    }
+  };
+
+  //Add Animal
   const addAnimal = async () => {
-    await axios.post(`${BASE_URL}/animal/add`, {
-      userId,
-      type,
-      name: animalName,
-      age: Number(age),
-      milkPerDay: Number(milkPerDay)
-    });
+    try {
+      await axios.post(`${BASE_URL}/animal/add`, {
+        userId,
+        type,
+        name: animalName,
+        age: Number(age),
+        milkPerDay: Number(milkPerDay)
+      });
 
-    setType('');
-    setAnimalName('');
-    setAge('');
-    setMilkPerDay('');
-    fetchAnimals();
+      fetchAnimals();
+
+      setAnimalName('');
+      setAge('');
+      setMilkPerDay('');
+
+      alert("Animal Added ✅");
+
+    } catch (err) {
+
+        if (err.response?.status === 409) {
+
+          const update = window.confirm(
+            "Animal already exists.\nUpdate animal details?"
+          );
+
+          if (update) {
+
+            await axios.put(`${BASE_URL}/animal/update`, {
+              userId,
+              type,
+              name: animalName,
+              age: Number(age),
+              milkPerDay: Number(milkPerDay)
+            });
+
+            fetchAnimals();
+
+            setAnimalName('');
+            setAge('');
+            setMilkPerDay('');
+
+            alert("Animal Updated ✅");
+          }
+
+          return;
+        }
+
+        console.log(err);
+        alert("Failed ❌");
+      }
   };
 
-  // 👤 Add Customer
+  //delete ANimal
+
+  const deleteAnimal = async (id) => {
+
+    const confirmDelete = window.confirm(
+      "Delete this animal?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+
+      await axios.delete(
+        `${BASE_URL}/animal/delete/${id}`
+      );
+
+      fetchAnimals();
+
+      alert("Animal Deleted ✅");
+
+    } catch (err) {
+      console.log(err);
+      alert("Delete Failed ❌");
+    }
+  };
+
+
+  // add Customers
+
+
   const addCustomer = async () => {
-    await axios.post(`${BASE_URL}/customer/add`, { userId, name });
-    setName('');
-    fetchCustomers();
+    try {
+      await axios.post(`${BASE_URL}/customer/add`, {
+        userId,
+        name: customerName,
+        phone,
+        address,
+        apartment
+      });
+
+      fetchCustomers();
+
+      setCustomerName('');
+      setPhone('');
+      setAddress('');
+      setApartment('');
+
+      alert("Customer Added ✅");
+
+    } catch (err) {
+
+      if (err.response?.status === 409) {
+
+        const update = window.confirm(
+          "Customer already exists.\nUpdate customer details?"
+        );
+
+        if (update) {
+
+          await axios.put(`${BASE_URL}/customer/update`, {
+            userId,
+            name: customerName,
+            phone,
+            address,
+            apartment
+          });
+
+          fetchCustomers();
+
+          alert("Customer Updated ✅");
+        }
+
+        return;
+      }
+
+      console.log(err);
+      alert("Failed ❌");
+    }
   };
 
-  // 🚚 Add Delivery
+  //delete customer
+
+  const deleteCustomer = async (id) => {
+
+    const confirmDelete = window.confirm(
+      "Delete this customer?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+
+      await axios.delete(
+        `${BASE_URL}/customer/delete/${id}`
+      );
+
+      fetchCustomers();
+
+      alert("Customer Deleted ✅");
+
+    } catch (err) {
+      console.log(err);
+      alert("Delete Failed ❌");
+    }
+  };
+
+  //add delivery
+
   const addDelivery = async () => {
-    await axios.post(`${BASE_URL}/delivery/add`, {
-      userId,
-      customerId,
-      date,
-      litres: Number(litres)
-    });
+    try {
 
-    setDate('');
-    setLitres('');
-    fetchDeliveries();
+      await axios.post(`${BASE_URL}/delivery/add`, {
+        userId,
+        customerId: selectedCustomer,
+        date: deliveryDate,
+        litres: Number(litres)
+      });
+
+      fetchDeliveries();
+
+      setSelectedCustomer('');
+      setDeliveryDate('');
+      setLitres('');
+
+      alert("Delivery Added ✅");
+
+    } catch (err) {
+
+      if (err.response?.status === 409) {
+
+        const update = window.confirm(
+          "Delivery already exists.\nUpdate delivery?"
+        );
+
+        if (update) {
+
+          await axios.put(`${BASE_URL}/delivery/update`, {
+            userId,
+            customerId: selectedCustomer,
+            date: deliveryDate,
+            litres: Number(litres)
+          });
+
+          fetchDeliveries();
+
+          alert("Delivery Updated ✅");
+        }
+
+        return;
+      }
+
+      console.log(err);
+      alert("Failed ❌");
+    }
   };
 
-  // 💰 Billing
-  const generateBill = async () => {
-    const res = await axios.post(`${BASE_URL}/billing/generate`, {
-      userId,
-      customerId: billCustomerId,
-      pricePerLitre: Number(price),
-      month
-    });
+  //delete delivery
 
-    setBill(res.data);
+  const deleteDelivery = async (id) => {
+
+    const confirmDelete = window.confirm(
+      "Delete this delivery?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+
+      await axios.delete(
+        `${BASE_URL}/delivery/delete/${id}`
+      );
+
+      fetchDeliveries();
+
+      alert("Delivery Deleted ✅");
+
+    } catch (err) {
+      console.log(err);
+      alert("Delete Failed ❌");
+    }
   };
 
-  const getTotalMilk = () => animals.reduce((sum, a) => sum + a.milkPerDay, 0);
-  const getTotalDeliveredMilk = () => deliveries.reduce((sum, d) => sum + d.litres, 0);
+  //generate bill
 
-  // 🔐 LOGIN / SIGNUP UI
+  const generateBill = () => {
+
+    const filteredDeliveries = deliveries.filter((d) => {
+
+      const sameCustomer =
+        d.customerId === billingCustomer;
+
+      const sameMonth =
+        d.date.startsWith(billingMonth);
+
+      return sameCustomer && sameMonth;
+    });
+
+    const totalLitres = filteredDeliveries.reduce(
+      (sum, d) => sum + d.litres,
+      0
+    );
+
+    const totalAmount =
+      totalLitres * Number(pricePerLitre);
+
+    setBillData({
+      totalLitres,
+      totalAmount
+    });
+  };
+
+  //download PDF
+
+  const downloadPDF = () => {
+
+    if (!billData) {
+      alert("Generate bill first ❌");
+      return;
+    }
+
+    const customer = customers.find(
+      (c) => c._id === billingCustomer
+    );
+
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("Dairy Farm Monthly Bill", 20, 20);
+
+    doc.setFontSize(12);
+    doc.text(`Customer: ${customer?.name}`, 20, 40);
+    doc.text(`Month: ${billingMonth}`, 20, 50);
+    doc.text(
+      `Total Litres: ${billData.totalLitres} L`,
+      20,
+      60
+    );
+    doc.text(
+      `Rate: ₹${pricePerLitre}/L`,
+      20,
+      70
+    );
+    doc.text(
+      `Total Amount: ₹${billData.totalAmount}`,
+      20,
+      80
+    );
+
+    doc.save("Monthly_Bill.pdf");
+  };
+
+  // LOGIN PAGE
   if (!isLoggedIn) {
     return (
       <div className="login-wrapper">
         <div className="card">
 
-          <h1>{isRegister ? "Sign Up" : "Log in"}</h1>
+          <h2>{isRegister ? "Sign Up" : "Login"}</h2>
 
-          <input placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} />
-          <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
+          <input
+            placeholder="Username"
+            onChange={e => setUsername(e.target.value)}
+          />
 
-          {/* 🔥 SHOW ONLY IN SIGNUP */}
+          <input
+            type="password"
+            placeholder="Password"
+            onChange={e => setPassword(e.target.value)}
+          />
+
           {isRegister && (
             <>
-              <input placeholder="Owner Name" value={ownerName} onChange={e => setOwnerName(e.target.value)} />
-              <input placeholder="Farm Address" value={farmAddress} onChange={e => setFarmAddress(e.target.value)} />
+              <input
+                placeholder="Owner Name"
+                onChange={e => setOwnerName(e.target.value)}
+              />
+
+              <input
+                placeholder="Farm Address"
+                onChange={e => setFarmAddress(e.target.value)}
+              />
             </>
           )}
 
           <button onClick={isRegister ? register : login}>
-            {isRegister ? "SIGN UP" : "SIGN IN"}
+            {isRegister ? "SIGN UP" : "LOGIN"}
           </button>
 
-          {!isRegister ? (
-            <p style={{ textAlign: "center", marginTop: 10, textDecoration: "underline", cursor: "pointer" }}
-              onClick={() => setIsRegister(true)}>
-              SIGN UP
-            </p>
-          ) : (
-            <p style={{ textAlign: "center", marginTop: 10, textDecoration: "underline", cursor: "pointer" }}
-              onClick={() => setIsRegister(false)}>
-              BACK TO LOGIN
-            </p>
-          )}
+          <p
+            className="link"
+            onClick={() => setIsRegister(!isRegister)}
+          >
+            {isRegister ? "Back to Login" : "Create Account"}
+          </p>
 
         </div>
       </div>
     );
   }
 
+  // DASHBOARD PAGE
+
+  const totalAnimals = animals.length;
+
+  const totalCustomers = customers.length;
+
+  const totalMilk = milkHistory.reduce(
+    (sum, m) => sum + m.total,
+    0
+  );
+
+  const totalDelivered = deliveries.reduce(
+    (sum, d) => sum + d.litres,
+    0
+  );
+
   return (
     <div className="container">
 
-      {/* HEADER */}
-      <div className="header">
-        <h2>🐄 Dairy App</h2>
-        <div onClick={() => setPage('home')}>🏡</div>
-      </div>
+      {/* DASHBOARD */}
+      {page === 'dashboard' && (
+        <div className="grid">
 
-      {/* HOME */}
-      {page === 'home' && (
-        <div className="card">
-          <h3>Owner Details</h3>
+          <div onClick={() => setPage('milk')}>
+            <span>🥛</span>Dairy Milk Entry
+          </div>
 
-          <p><b>Name:</b> {ownerName}</p>
-          <p><b>Farm Address:</b> {farmAddress}</p>
+          <div onClick={() => alert("repati kosam...")}>
+            <span>🧍</span>Milk Individual
+          </div>
 
-          <p><b>Total Milk:</b> {getTotalMilk()} L</p>
-          <p><b>Delivered:</b> {getTotalDeliveredMilk()} L</p>
+          <div onClick={() => setPage('animals')}>
+            <span>🐄</span>Manage Animals
+          </div>
 
-          <button
-            onClick={() => {
-              setIsLoggedIn(false);
-              setUserId('');
-            }}
-            style={{ background: 'red', color: 'white' }}
-          >
-            Logout 🚪
-          </button>
+          <div onClick={() => setPage('customers')}>
+            <span>👥</span>Manage Customers
+          </div>
+
+          <div onClick={() => setPage('delivery')}>
+            <span>🚚</span>Milk Delivery
+          </div>
+
+          <div onClick={() => setPage('billing')}>
+            <span>💰</span>Monthly Billing
+          </div>
+
+          <div onClick={() => setPage('summary')}>
+            <span>📊</span>Farm Summary
+          </div>
+
         </div>
       )}
 
-      {/* ANIMALS */}
+      {/* MILK ENTRY */}
+      {page === 'milk' && (
+        <div className="card">
+
+          <button onClick={() => setPage('dashboard')}>
+            ⬅ Back
+          </button>
+
+          <h3>Dairy Milk Entry</h3>
+
+          <input
+            type="date"
+            value={milkDate}
+            max={new Date().toISOString().split("T")[0]}
+            onChange={e => setMilkDate(e.target.value)}
+          />
+
+          <input
+            placeholder="Morning Milk"
+            value={morning}
+            onChange={e => setMorning(e.target.value)}
+          />
+
+          <input
+            placeholder="Evening Milk"
+            value={evening}
+            onChange={e => setEvening(e.target.value)}
+          />
+
+          <button onClick={addMilk}>
+            Save
+          </button>
+
+          <h3>Milk History</h3>
+
+          {milkHistory.length === 0 ? (
+            <p>No Records Found</p>
+          ) : (
+            milkHistory.map((m) => (
+              <div
+                key={m._id}
+                style={{
+                  background: "#f5f5f5",
+                  padding: "10px",
+                  marginTop: "10px",
+                  borderRadius: "10px"
+                }}
+              >
+                <p><b>Date:</b> {m.date}</p>
+                <p><b>Morning:</b> {m.morning} L</p>
+                <p><b>Evening:</b> {m.evening} L</p>
+                <p><b>Total:</b> {m.total} L</p>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    marginTop: "10px"
+                  }}
+                >
+                  <button
+                    style={{ flex: 1, marginTop: 0 }}
+                    onClick={() => {
+                      setMilkDate(m.date);
+                      setMorning(m.morning);
+                      setEvening(m.evening);
+                    }}
+                  >
+                    ✏️ Edit
+                  </button>
+
+                  <button
+                    style={{
+                      flex: 1,
+                      marginTop: 0,
+                      background: "red"
+                    }}
+                    onClick={() => deleteMilk(m._id)}
+                  >
+                    🗑️ Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+
+        </div>
+      )}
+
+      {/* ANIMALS Entry */}
+
       {page === 'animals' && (
         <div className="card">
-          <h3>Animals</h3>
 
-          <input placeholder="Type" value={type} onChange={e => setType(e.target.value)} />
-          <input placeholder="Name" value={animalName} onChange={e => setAnimalName(e.target.value)} />
-          <input placeholder="Age" value={age} onChange={e => setAge(e.target.value)} />
-          <input placeholder="Milk/day" value={milkPerDay} onChange={e => setMilkPerDay(e.target.value)} />
+          <button onClick={() => setPage('dashboard')}>
+            ⬅ Back
+          </button>
 
-          <button onClick={addAnimal}>Add</button>
+          <h3>Manage Animals</h3>
 
-          {animals.map(a => (
-            <div key={a._id}>
-              🐄 {a.type} - {a.name} - {a.milkPerDay}L
-            </div>
-          ))}
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+          >
+            <option>Cow</option>
+            <option>Buffalo</option>
+          </select>
+
+          <input
+            placeholder="Animal Name"
+            value={animalName}
+            onChange={(e) => setAnimalName(e.target.value)}
+          />
+
+          <input
+            type="number"
+            placeholder="Age"
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+          />
+
+          <input
+            type="number"
+            placeholder="Milk Per Day"
+            value={milkPerDay}
+            onChange={(e) => setMilkPerDay(e.target.value)}
+          />
+
+          <button onClick={addAnimal}>
+            Add Animal
+          </button>
+
+          <h3>Animal List</h3>
+
+          {animals.length === 0 ? (
+            <p>No Animals Found</p>
+          ) : (
+            animals.map((a) => (
+              <div
+                key={a._id}
+                style={{
+                  background: "#f5f5f5",
+                  padding: "10px",
+                  marginTop: "10px",
+                  borderRadius: "10px"
+                }}
+              >
+                <p><b>Type:</b> {a.type}</p>
+                <p><b>Name:</b> {a.name}</p>
+                <p><b>Age:</b> {a.age}</p>
+                <p><b>Milk:</b> {a.milkPerDay} L/day</p>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    marginTop: "10px"
+                  }}
+                >
+                  <button
+                    style={{ flex: 1, marginTop: 0 }}
+                    onClick={() => {
+                      setType(a.type);
+                      setAnimalName(a.name);
+                      setAge(a.age);
+                      setMilkPerDay(a.milkPerDay);
+                    }}
+                  >
+                    ✏️ Edit
+                  </button>
+
+                  <button
+                    style={{
+                      flex: 1,
+                      marginTop: 0,
+                      background: "red"
+                    }}
+                    onClick={() => deleteAnimal(a._id)}
+                  >
+                    🗑️ Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+
         </div>
       )}
 
-      {/* CUSTOMER */}
-      {page === 'customer' && (
+
+      {/* CUSTOMERS Entry */}
+
+      {page === 'customers' && (
         <div className="card">
-          <h3>Customer</h3>
-          <input value={name} onChange={e => setName(e.target.value)} />
-          <button onClick={addCustomer}>Add</button>
+
+          <button onClick={() => setPage('dashboard')}>
+            ⬅ Back
+          </button>
+
+          <h3>Manage Customers</h3>
+
+          <input
+            placeholder="Customer Name"
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+          />
+
+          <input
+            placeholder="Phone Number"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+
+          <input
+            placeholder="Address"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          />
+
+          <input
+            placeholder="Apartment / Area"
+            value={apartment}
+            onChange={(e) => setApartment(e.target.value)}
+          />
+
+          <button onClick={addCustomer}>
+            Add Customer
+          </button>
+
+          <h3>Customer List</h3>
+
+          {customers.length === 0 ? (
+            <p>No Customers Found</p>
+          ) : (
+            customers.map((c) => (
+              <div
+                key={c._id}
+                style={{
+                  background: "#f5f5f5",
+                  padding: "10px",
+                  marginTop: "10px",
+                  borderRadius: "10px"
+                }}
+              >
+                <p><b>Name:</b> {c.name}</p>
+                <p><b>Phone:</b> {c.phone}</p>
+                <p><b>Address:</b> {c.address}</p>
+                <p><b>Area:</b> {c.apartment}</p>
+
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    marginTop: "10px"
+                  }}
+                >
+                  <button
+                    style={{ flex: 1, marginTop: 0 }}
+                    onClick={() => {
+                      setCustomerName(c.name);
+                      setPhone(c.phone);
+                      setAddress(c.address);
+                      setApartment(c.apartment);
+                    }}
+                  >
+                    ✏️ Edit
+                  </button>
+
+                  <button
+                    style={{
+                      flex: 1,
+                      marginTop: 0,
+                      background: "red"
+                    }}
+                    onClick={() => deleteCustomer(c._id)}
+                  >
+                    🗑️ Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+
         </div>
       )}
 
-      {/* DELIVERY */}
+      {/* DELIVERY Entry */}
+
       {page === 'delivery' && (
         <div className="card">
-          <h3>Delivery</h3>
 
-          <select onChange={e => setCustomerId(e.target.value)}>
-            <option>Select Customer</option>
-            {customers.map(c => (
-              <option key={c._id} value={c._id}>{c.name}</option>
+          <button onClick={() => setPage('dashboard')}>
+            ⬅ Back
+          </button>
+
+          <h3>Milk Delivery</h3>
+
+          <select
+            value={selectedCustomer}
+            onChange={(e) => setSelectedCustomer(e.target.value)}
+          >
+            <option value="">Select Customer</option>
+
+            {customers.map((c) => (
+              <option key={c._id} value={c._id}>
+                {c.name}
+              </option>
             ))}
           </select>
 
-          <input placeholder="Date" value={date} onChange={e => setDate(e.target.value)} />
-          <input placeholder="Litres" value={litres} onChange={e => setLitres(e.target.value)} />
+          <input
+            type="date"
+            value={deliveryDate}
+            max={new Date().toISOString().split("T")[0]}
+            onChange={(e) => setDeliveryDate(e.target.value)}
+          />
 
-          <button onClick={addDelivery}>Add</button>
+          <input
+            type="number"
+            placeholder="Litres Delivered"
+            value={litres}
+            onChange={(e) => setLitres(e.target.value)}
+          />
+
+          <button onClick={addDelivery}>
+            Save Delivery
+          </button>
+
+          <h3>Delivery History</h3>
+
+          {deliveries.length === 0 ? (
+            <p>No Deliveries Found</p>
+          ) : (
+            deliveries.map((d) => {
+
+              const customer = customers.find(
+                (c) => c._id === d.customerId
+              );
+
+              return (
+                <div
+                  key={d._id}
+                  style={{
+                    background: "#f5f5f5",
+                    padding: "10px",
+                    marginTop: "10px",
+                    borderRadius: "10px"
+                  }}
+                >
+                  <p>
+                    <b>Customer:</b>{" "}
+                    {customer?.name || "Unknown"}
+                  </p>
+
+                  <p><b>Date:</b> {d.date}</p>
+
+                  <p><b>Litres:</b> {d.litres} L</p>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "10px",
+                      marginTop: "10px"
+                    }}
+                  >
+                    <button
+                      style={{
+                        flex: 1,
+                        marginTop: 0
+                      }}
+                      onClick={() => {
+                        setSelectedCustomer(d.customerId);
+                        setDeliveryDate(d.date);
+                        setLitres(d.litres);
+                      }}
+                    >
+                      ✏️ Edit
+                    </button>
+
+                    <button
+                      style={{
+                        flex: 1,
+                        marginTop: 0,
+                        background: "red"
+                      }}
+                      onClick={() => deleteDelivery(d._id)}
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+
+                </div>
+              );
+            })
+          )}
+
         </div>
       )}
 
-      {/* BILLING */}
+      {/* BILLING */ }
       {page === 'billing' && (
         <div className="card">
-          <h3>Billing</h3>
 
-          <select onChange={e => setBillCustomerId(e.target.value)}>
-            <option>Select Customer</option>
-            {customers.map(c => (
-              <option key={c._id} value={c._id}>{c.name}</option>
+          <button onClick={() => setPage('dashboard')}>
+            ⬅ Back
+          </button>
+
+          <h3>Monthly Billing</h3>
+
+          <select
+            value={billingCustomer}
+            onChange={(e) => setBillingCustomer(e.target.value)}
+          >
+            <option value="">Select Customer</option>
+
+            {customers.map((c) => (
+              <option key={c._id} value={c._id}>
+                {c.name}
+              </option>
             ))}
           </select>
 
-          <input placeholder="Month" value={month} onChange={e => setMonth(e.target.value)} />
-          <input placeholder="Price" value={price} onChange={e => setPrice(e.target.value)} />
+          <input
+            type="month"
+            value={billingMonth}
+            onChange={(e) => setBillingMonth(e.target.value)}
+          />
 
-          <button onClick={generateBill}>Generate</button>
+          <input
+            type="number"
+            placeholder="Price Per Litre"
+            value={pricePerLitre}
+            onChange={(e) => setPricePerLitre(e.target.value)}
+          />
 
-          {bill && <h3>₹ {bill.totalAmount}</h3>}
+          <button onClick={generateBill}>
+            Generate Bill
+          </button>
+
+          {billData && (
+            <>
+              <div
+                style={{
+                  background: "#f5f5f5",
+                  padding: "15px",
+                  marginTop: "15px",
+                  borderRadius: "10px"
+                }}
+              >
+                <p>
+                  <b>Total Litres:</b> {billData.totalLitres} L
+                </p>
+
+                <p>
+                  <b>Total Amount:</b> ₹{billData.totalAmount}
+                </p>
+              </div>
+
+              <button onClick={downloadPDF}>
+                📄 Download PDF
+              </button>
+            </>
+          )}
+
         </div>
       )}
 
-      {/* NAVBAR */}
-      <div className="navbar">
-        <div onClick={() => setPage('animals')}>🐄</div>
-        <div onClick={() => setPage('delivery')}>🚚</div>
-        <div onClick={() => setPage('customer')}>👤</div>
-        <div onClick={() => setPage('billing')}>💰</div>
-      </div>
+      {/* SUMMARY */}
+      {page === 'summary' && (
+        <div className="card">
+
+          <button onClick={() => setPage('dashboard')}>
+            ⬅ Back
+          </button>
+
+          <h3>Farm Summary</h3>
+
+          <p><b>Owner:</b> {ownerName}</p>
+          <p><b>Address:</b> {farmAddress}</p>
+
+          <hr />
+
+          <p>
+            <b>Total Animals:</b> {totalAnimals}
+          </p>
+
+          <p>
+            <b>Total Customers:</b> {totalCustomers}
+          </p>
+
+          <p>
+            <b>Total Milk Collected:</b> {totalMilk} L
+          </p>
+
+          <p>
+            <b>Total Milk Delivered:</b> {totalDelivered} L
+          </p>
+
+          <p>
+            <b>Total Milk Entries:</b> {milkHistory.length}
+          </p>
+
+        </div>
+      )}
 
     </div>
   );
