@@ -50,7 +50,7 @@ function App() {
   const [pricePerLitre, setPricePerLitre] = useState('');
   const [billData, setBillData] = useState(null);
 
-  const BASE_URL = "https://YOUR-BACKEND.onrender.com";
+  const BASE_URL = "https://backendfarm-7lzo.onrender.com";
 
   // Fetch Milk History
   const fetchMilk = useCallback(async () => {
