@@ -50,7 +50,7 @@ function App() {
   const [pricePerLitre, setPricePerLitre] = useState('');
   const [billData, setBillData] = useState(null);
 
-  const BASE_URL = "http://localhost:5000";
+  const BASE_URL = "https://dairy-farm-backend.onrender.com";
 
   // Fetch Milk History
   const fetchMilk = useCallback(async () => {
@@ -1121,7 +1121,7 @@ function App() {
 
       {/* SUMMARY */}
       {page === 'summary' && (
-        <div className="card">
+        <div className="card">    
 
           <button onClick={() => setPage('dashboard')}>
             ⬅ Back
